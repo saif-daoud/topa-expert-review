@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting…</title>
+    <script>
+      // GitHub Pages SPA fallback for repo: /topa-expert-review
+      var repo = "/topa-expert-review";
+      var l = window.location;
+      var path = l.pathname.startsWith(repo) ? l.pathname.slice(repo.length) : l.pathname;
+
+      l.replace(
+        repo +
+          "/?p=" +
+          encodeURIComponent(path) +
+          "&q=" +
+          encodeURIComponent(l.search.slice(1)) +
+          l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

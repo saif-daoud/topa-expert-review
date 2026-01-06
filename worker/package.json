@@ -1,0 +1,12 @@
+{
+  "name": "topa-firestore-worker-api-3",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "wrangler": "^4.54.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "create-code": "node scripts/create_access_code.mjs"
+  }
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TOPA Expert Review</title>
+    <script>
+      (function () {
+        var l = window.location;
+        var params = new URLSearchParams(l.search);
+        var p = params.get("p");
+        var q = params.get("q");
+        if (p !== null) {
+          params.delete("p");
+          params.delete("q");
+
+          var repo = "/topa-expert-review";
+          var newPath = repo + (p.startsWith("/") ? p : "/" + p);
+          var newSearch = q ? "?" + q : "";
+          window.history.replaceState(null, "", newPath + newSearch + l.hash);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
