@@ -314,7 +314,6 @@ if (res?.assigned_chunk !== null && res?.assigned_chunk !== undefined) {
 function ChunkSelectPage() {
   const nav = useNavigate();
   const token = localStorage.getItem("token") || "";
-  const pid = localStorage.getItem("pid") || "";
   const storedChunkStr = localStorage.getItem("chunk_id");
   const storedChunk = storedChunkStr === null ? NaN : Number(storedChunkStr);
   const storedChunkFinite = Number.isFinite(storedChunk);
@@ -425,7 +424,6 @@ function ReviewPage() {
   const nav = useNavigate();
 
   const token = localStorage.getItem("token") || "";
-  const pid = localStorage.getItem("pid") || "";
   const chunkId = Number(localStorage.getItem("chunk_id") || "0");
 
   const [macros, setMacros] = useState<ActionSpaceMacro[]>([]);
