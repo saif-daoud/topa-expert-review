@@ -2,6 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import "./App.css";
 
+// API base should include the worker's /api prefix, e.g.:
+//   local:  http://127.0.0.1:8787/api
+//   remote: https://<worker>.workers.dev/api
+//
+// For local dev convenience, if VITE_API_BASE is not set we default to the local worker.
+// In production builds (GH Pages), you should set VITE_API_BASE so the frontend calls the
+// deployed worker instead of attempting same-origin requests.
 const API_BASE =
   (import.meta.env.VITE_API_BASE as string) ||
   (import.meta.env.DEV ? "http://127.0.0.1:8787/api" : "");
@@ -10,6 +17,9 @@ const API_BASE =
 const BASE_URL = import.meta.env.BASE_URL;
 const BASENAME = BASE_URL.endsWith("/") ? BASE_URL.slice(0, -1) : BASE_URL;
 
+// -----------------------------
+// Config (change here)
+// -----------------------------
 const NUM_CHUNKS = 4;
 
 // -----------------------------
@@ -52,6 +62,11 @@ type DatasetUser = {
     session_metadata: any;
     dialogue: Array<{ speaker: string; text: string }>;
   }>;
+};
+
+type AuthState = {
+  token: string;
+  participant_id: string;
 };
 
 // -----------------------------
@@ -268,22 +283,9 @@ if (res?.assigned_chunk !== null && res?.assigned_chunk !== undefined) {
     <div className="container">
       <div className="card">
         <h1 className="title">TOPA — Expert Review</h1>
-
         <p className="muted">
-          We have a dataset composed of around 1400 CBT sessions, that we automatically annotated using an <b>action space</b> extracted from therapy
-          textbooks. This website shows only the annotations with <b>high uncertainty</b> (or missing labels)
-          for your manual review.
+          Enter your access code to review low-confidence (or missing) automatic annotations.
         </p>
-
-        <div className="infoBox">
-          <div className="infoTitle">Action space</div>
-          <div className="infoText">
-            A set of therapist behaviors organized at two levels. <b>Macro actions</b> are high-level
-            dialogue strategies or phases performed by the Therapist toward the Patient; for each macro
-            action, there is a list of <b>micro actions</b> that are directly actionable at the utterance
-            level and realize the underlying macro action.
-          </div>
-        </div>
 
         <div className="row">
           <label className="label">Access code</label>
@@ -316,7 +318,6 @@ if (res?.assigned_chunk !== null && res?.assigned_chunk !== undefined) {
 function ChunkSelectPage() {
   const nav = useNavigate();
   const token = localStorage.getItem("token") || "";
-  const pid = localStorage.getItem("pid") || "";
   const storedChunkStr = localStorage.getItem("chunk_id");
   const storedChunk = storedChunkStr === null ? NaN : Number(storedChunkStr);
   const storedChunkFinite = Number.isFinite(storedChunk);
@@ -386,7 +387,7 @@ function onLogout() {
             </p>
           </div>
           <div className="topbarActions">
-            {/* <div className="chip">ID: {pid || "—"}</div> */}
+            <div className="chip">ID: {pid || "—"}</div>
             <button className="btn" onClick={onLogout}>Logout</button>
           </div>
         </div>
@@ -427,7 +428,6 @@ function ReviewPage() {
   const nav = useNavigate();
 
   const token = localStorage.getItem("token") || "";
-  const pid = localStorage.getItem("pid") || "";
   const chunkId = Number(localStorage.getItem("chunk_id") || "0");
 
   const [macros, setMacros] = useState<ActionSpaceMacro[]>([]);
@@ -735,7 +735,7 @@ function ReviewPage() {
             </p>
           </div>
           <div className="topbarActions">
-            {/* <div className="chip">ID: {pid || "—"}</div> */}
+            <div className="chip">ID: {pid || "—"}</div>
             <button className="btn" onClick={() => nav("/chunks")}>Change chunk</button>
             <button className="btn" onClick={onLogout}>Logout</button>
           </div>
@@ -764,6 +764,7 @@ function ReviewPage() {
                   <div><span className="metaK">user_idx</span> {cur.user_idx}</div>
                   <div><span className="metaK">session_idx</span> {cur.session_idx}</div>
                   <div><span className="metaK">utterance_id</span> {cur.utterance_id}</div>
+                  <div><span className="metaK">cluster</span> {cur.cluster_id ?? "—"}</div>
                 </div>
 
                 <div className="block">
@@ -802,32 +803,32 @@ function ReviewPage() {
                 </div>
 <div className="rowInline">
                   <button className="btn" onClick={() => setShowTranscript(true)} disabled={!transcript}>
-                    Show full session transcript
+                    Show transcript (start → current + next)
                   </button>
                   {!transcript && (
                     <span className="muted small">
-                      The full transcript is not available.
+                      Transcript not available in the provided subset.
                     </span>
                   )}
                 </div>
               </div>
 
               <div className="panel">
-                <h2 className="subtitle">Annotation Review</h2>
+                <h2 className="subtitle">Your annotation</h2>
 
 <div className="row">
                   <div className="autoAnn">
                     <div className="autoAnnTitle">Automatic annotation</div>
                     <div className="autoAnnGrid">
-                      <div className="autoAnnLabel">Macro action:</div>
+                      <div className="autoAnnLabel">Auto macro:</div>
                       <div className="autoAnnValue">{cur?.selected_macro_action || "—"}</div>
 
-                      <div className="autoAnnLabel">Micro action:</div>
+                      <div className="autoAnnLabel">Auto micro:</div>
                       <div className="autoAnnValue">{cur?.selected_micro_action || "—"}</div>
 
-                      <div className="autoAnnLabel">Confidence score:</div>
+                      <div className="autoAnnLabel">Auto conf:</div>
                       <div className="autoAnnValue">
-                        {cur?.confidence_score === null || cur?.confidence_score === undefined || cur?.confidence_score === ""
+                        {cur?.confidence_score === null || cur?.confidence_score === undefined
                           ? "—"
                           : String(cur?.confidence_score)}
                       </div>
