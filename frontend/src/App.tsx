@@ -384,7 +384,7 @@ function onLogout() {
             </p>
           </div>
           <div className="topbarActions">
-            <div className="chip">ID: {pid || "—"}</div>
+            {/* <div className="chip">ID: {pid || "—"}</div> */}
             <button className="btn" onClick={onLogout}>Logout</button>
           </div>
         </div>
@@ -733,7 +733,7 @@ function ReviewPage() {
             </p>
           </div>
           <div className="topbarActions">
-            <div className="chip">ID: {pid || "—"}</div>
+            {/* <div className="chip">ID: {pid || "—"}</div> */}
             <button className="btn" onClick={() => nav("/chunks")}>Change chunk</button>
             <button className="btn" onClick={onLogout}>Logout</button>
           </div>
@@ -762,7 +762,7 @@ function ReviewPage() {
                   <div><span className="metaK">user_idx</span> {cur.user_idx}</div>
                   <div><span className="metaK">session_idx</span> {cur.session_idx}</div>
                   <div><span className="metaK">utterance_id</span> {cur.utterance_id}</div>
-                  <div><span className="metaK">cluster</span> {cur.cluster_id ?? "—"}</div>
+                  {/* <div><span className="metaK">cluster</span> {cur.cluster_id ?? "—"}</div> */}
                 </div>
 
                 <div className="block">
@@ -801,30 +801,30 @@ function ReviewPage() {
                 </div>
 <div className="rowInline">
                   <button className="btn" onClick={() => setShowTranscript(true)} disabled={!transcript}>
-                    Show transcript (start → current + next)
+                    Show the full session transcript
                   </button>
                   {!transcript && (
                     <span className="muted small">
-                      Transcript not available in the provided subset.
+                      Full transcript is not available.
                     </span>
                   )}
                 </div>
               </div>
 
               <div className="panel">
-                <h2 className="subtitle">Your annotation</h2>
+                <h2 className="subtitle">Annotation Review</h2>
 
 <div className="row">
                   <div className="autoAnn">
                     <div className="autoAnnTitle">Automatic annotation</div>
                     <div className="autoAnnGrid">
-                      <div className="autoAnnLabel">Auto macro:</div>
+                      <div className="autoAnnLabel">Macro action:</div>
                       <div className="autoAnnValue">{cur?.selected_macro_action || "—"}</div>
 
-                      <div className="autoAnnLabel">Auto micro:</div>
+                      <div className="autoAnnLabel">Micro action:</div>
                       <div className="autoAnnValue">{cur?.selected_micro_action || "—"}</div>
 
-                      <div className="autoAnnLabel">Auto conf:</div>
+                      <div className="autoAnnLabel">Confidence score:</div>
                       <div className="autoAnnValue">
                         {cur?.confidence_score === null || cur?.confidence_score === undefined
                           ? "—"
