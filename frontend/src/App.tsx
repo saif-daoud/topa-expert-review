@@ -547,7 +547,6 @@ function onLogout() {
             <h1 className="title">Select your chunk</h1>
             <p className="muted">
               Choose a chunk to work on. Chunk <strong>0</strong> contains the most uncertain items; chunk {NUM_CHUNKS - 1} is the least uncertain.
-              Chunks are locked by <strong>email</strong> (not by access code) so multiple experts can share one code safely.
             </p>
           </div>
           <div className="topbarActions">
