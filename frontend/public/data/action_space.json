@@ -63,6 +63,56 @@
           "Therapeutic engagement seems hesitant"
         ],
         "confidence_score": 0.97
+      },
+      {
+        "name": "Guide Patient Attention or Cognitive Focus",
+        "description": "Prompt or direct the patient to focus attention, notice specific tendencies, or attend to internal experiences as part of engagement.",
+        "states": [
+          "Patient becomes distracted or disengaged",
+          "Initiating a therapeutic exercise",
+          "Patient is anxious or has difficulty concentrating"
+        ],
+        "confidence_score": 0.85
+      },
+      {
+        "name": "Facilitate Therapeutic Task Transitions",
+        "description": "Smoothly transition between topics or therapeutic tasks, explicitly noting task changes or clarifying the shift to maintain collaboration and engagement.",
+        "states": [
+          "Shifting between different therapy exercises",
+          "Introducing new topics or tasks within a session",
+          "Session is moving between major segments"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Clarify Therapeutic Communication",
+        "description": "Clarify ambiguous statements or unfinished thoughts to ensure patient understands therapist’s intent and feels included in ongoing therapeutic dialogue.",
+        "states": [
+          "Therapist is interrupted or speech is fragmented",
+          "Patient asks for clarification",
+          "Session has moments of conversational confusion"
+        ],
+        "confidence_score": 0.75
+      },
+      {
+        "name": "Support Patient Problem-Solving with Practical Suggestions",
+        "description": "Offer practical options, brainstorm solutions, or gently explore approaches for patient-identified challenges to foster collaborative problem-solving.",
+        "states": [
+          "Patient expresses a practical or physical challenge",
+          "Patient is seeking strategies beyond cognitive work",
+          "Therapist and patient collaborate on addressing real-world issues"
+        ],
+        "confidence_score": 0.85
+      },
+      {
+        "name": "Check Patient Comprehension or Agreement",
+        "description": "Ask if the patient understands, agrees, or is following the therapist’s statements or session flow to maintain engagement and rapport.",
+        "states": [
+          "Therapist introduces new concept or task",
+          "Patient gives minimal responses",
+          "Potential confusion or uncertainty about session content"
+        ],
+        "confidence_score": 0.75
       }
     ]
   },
@@ -128,6 +178,25 @@
           "Patient benefits from supplemental information"
         ],
         "confidence_score": 0.96
+      },
+      {
+        "name": "Acknowledge Logistical or Administrative Details",
+        "description": "Address, clarify, or confirm session logistics, billing, paperwork, licensure, or other administrative or practical matters of therapy.",
+        "states": [
+          "Patient discusses therapy logistics, payment, or administrative requirements",
+          "Therapy is beginning or changing format/location",
+          "Patient expresses confusion or concerns about administrative processes"
+        ],
+        "confidence_score": 0.95
+      },
+      {
+        "name": "Reflect or Paraphrase Patient Experience",
+        "description": "Therapist restates, summarizes, or mirrors the patient’s statement, experience, or feeling, often to ensure understanding or validate.",
+        "states": [
+          "Patient shares narrative/experience and therapist seeks to confirm or clarify understanding",
+          "Therapist is facilitating patient reflection"
+        ],
+        "confidence_score": 0.8
       }
     ]
   },
@@ -191,6 +260,63 @@
           "Complex or overlapping symptoms"
         ],
         "confidence_score": 0.98
+      },
+      {
+        "name": "Reflect and Validate Emotional Experiences",
+        "description": "Therapist explicitly reflects or restates patient's described emotional states or reactions in order to demonstrate understanding and validation.",
+        "states": [
+          "Patient has just described or hinted at an emotional experience, symptom, or feeling",
+          "Patient may need emotional validation to elaborate on difficulties",
+          "Early rapport-building during assessment"
+        ],
+        "confidence_score": 0.95
+      },
+      {
+        "name": "Use Humor or Light Commentary to Build Rapport",
+        "description": "Therapist uses gentle humor, playful teasing, or relatable commentary to build therapeutic alliance, reduce defensiveness, and set context for information-gathering.",
+        "states": [
+          "Assessment phase when patient appears anxious, defensive, or hesitant",
+          "When context or history allows light humor without undermining seriousness of assessment",
+          "Early session rapport-building"
+        ],
+        "confidence_score": 0.9
+      },
+      {
+        "name": "Acknowledge Patient’s Insight or Self-Awareness",
+        "description": "Therapist indicates agreement or acknowledges moments when patient demonstrates awareness or insight into their own symptoms, patterns, or history.",
+        "states": [
+          "Patient demonstrates articulated understanding of their issues or symptoms",
+          "Therapist wishes to reinforce insight",
+          "During formulation or clarification of experiences"
+        ],
+        "confidence_score": 0.88
+      },
+      {
+        "name": "Clarify Physical or Behavioral Details",
+        "description": "Therapist uses gestures, brief clarifications, or physical examples (including inaudible dialogue or referencing physical states) to clarify concrete details about symptoms, behaviors, or histories.",
+        "states": [
+          "Patient describes physical symptoms or behaviors requiring further clarification",
+          "Assessment of functional impact or specificity of presentation"
+        ],
+        "confidence_score": 0.85
+      },
+      {
+        "name": "Explore Possible Change or Agency",
+        "description": "Therapist affirms patient's ability or opportunity to change problematic patterns, offering statements about possibility, agency, or control, without prescribing specific interventions.",
+        "states": [
+          "Patient discusses recurrent or problematic behaviors/symptoms",
+          "Assessment phase when therapist is gauging patient’s belief in change or readiness"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Summarize and Connect Patient’s Experiences",
+        "description": "Therapist briefly synthesizes or connects patient's disclosures for clarification, summarizing common themes or linking emotions/behaviors to broader conceptual understanding.",
+        "states": [
+          "Patient provides narrative with multiple symptoms or events",
+          "Therapist seeks to highlight or clarify links for assessment/formulation"
+        ],
+        "confidence_score": 0.82
       }
     ]
   },
@@ -256,6 +382,41 @@
           "Patient undecided or unmotivated"
         ],
         "confidence_score": 0.96
+      },
+      {
+        "name": "Acknowledge Patient's Situation or Context",
+        "description": "Therapist comments on, summarizes, or recognizes the patient's current life circumstances, restrictions, or personal situation relevant to goals/agendas.",
+        "states": [
+          "Patient describes recent life changes affecting ability to set goals",
+          "Patient is facing restrictions or contextual factors affecting agenda"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Encourage Positive Reframing Regarding Plans or Goals",
+        "description": "Therapist helps patient identify opportunities, find meaning, or reframe perceived challenges in context of planning or facing obstacles.",
+        "states": [
+          "Patient expresses concern or frustration about goal relevance or challenges",
+          "Therapist tries to shift perspective toward positive or adaptive meaning"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Clarify or Confirm Specific Session Details",
+        "description": "Therapist asks questions or makes comments to ensure mutual understanding of specific logistics, timing, or details directly related to session/agendas.",
+        "states": [
+          "Confirming date, time, or procedural details",
+          "Patient and therapist negotiating next steps or appointment settings"
+        ],
+        "confidence_score": 0.85
+      },
+      {
+        "name": "Facilitate Administrative or Procedural Planning",
+        "description": "Therapist discusses, explains, or problem-solves around insurance, paperwork, communication channels, or institutional processes required for ongoing sessions/goals.",
+        "states": [
+          "Patient needs help with paperwork, insurance, or institutional communication"
+        ],
+        "confidence_score": 0.83
       }
     ]
   },
@@ -329,6 +490,51 @@
           "Persistent maladaptive thoughts"
         ],
         "confidence_score": 0.97
+      },
+      {
+        "name": "Use Illustrative Metaphor or Anecdote",
+        "description": "Introduce an example, metaphor, or anecdote to indirectly prompt cognitive reevaluation or highlight cognitive patterns without explicit questioning.",
+        "states": [
+          "Patient appears stuck or resistant to direct cognitive challenge",
+          "Therapist wants to normalize or contextualize cognitive errors using external reference"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Normalize Cognitive or Emotional Responses",
+        "description": "Frame cognitive or emotional reactions as common, understandable, or expected to reduce shame and facilitate insight.",
+        "states": [
+          "Patient expresses distress or embarrassment about thoughts/beliefs",
+          "Therapist seeks to lessen patient defensiveness or despair"
+        ],
+        "confidence_score": 0.85
+      },
+      {
+        "name": "Humorous Reframing",
+        "description": "Use gentle humor or playful comments to invite cognitive distance or perspective on a belief/thought.",
+        "states": [
+          "Patient is emotionally stuck or overly rigid in self-judgment",
+          "Therapist aims to lighten emotional load as part of cognitive shift"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Clarify Cognitive Process or Task",
+        "description": "Restate, define, or clarify what is being discussed to ensure patient understands the cognitive intervention or step.",
+        "states": [
+          "During explanation of CBT/REBT principles or dispute procedures",
+          "Patient appears confused about concepts or terminology"
+        ],
+        "confidence_score": 0.75
+      },
+      {
+        "name": "Encourage Engagement or Participation",
+        "description": "Prompt patient to continue (e.g., 'OK', 'So...', 'Mm-hmm') or invite further processing without explicit direction.",
+        "states": [
+          "Therapist wants patient to elaborate on thoughts or continue cognitive work",
+          "During role reversal or when patient pauses/hesitates"
+        ],
+        "confidence_score": 0.7
       }
     ]
   },
@@ -393,6 +599,26 @@
           "Ongoing review/maintenance"
         ],
         "confidence_score": 0.98
+      },
+      {
+        "name": "Convey Empathic Validation of Patient Experience",
+        "description": "Therapist expresses understanding, acceptance, or emotional resonance with the patient's account without further probing or intervention.",
+        "states": [
+          "Patient shares emotionally charged memories or beliefs",
+          "Therapist seeks to build an alliance without analysis",
+          "Patient needs affirmation or support before further schema work"
+        ],
+        "confidence_score": 0.95
+      },
+      {
+        "name": "Encourage Elaboration of Core Narrative",
+        "description": "Therapist prompts patient to continue sharing details about formative experiences, relationships, or schema-related content (often using brief invitations, e.g., 'Explain', 'Go on', 'Tell me more').",
+        "states": [
+          "Patient starts recounting family or early relational history",
+          "Therapist wants patient to further explore origins of beliefs",
+          "Schema work in narrative phase"
+        ],
+        "confidence_score": 0.8
       }
     ]
   },
@@ -457,6 +683,26 @@
           "Homework or between-session review"
         ],
         "confidence_score": 0.99
+      },
+      {
+        "name": "Validate Emotional Experience Related to Behavior Change",
+        "description": "Acknowledge and normalize the patient's emotional responses (such as exhaustion, frustration, guilt, or overwhelm) when discussing or implementing behavioral changes and skill building.",
+        "states": [
+          "Patient expresses negative emotions about activation, change, or new routines",
+          "Patient feels stuck, exhausted, or guilty about avoidance or failed attempts",
+          "Early stages of discussing activity/skill goals where emotional validation may boost engagement"
+        ],
+        "confidence_score": 0.85
+      },
+      {
+        "name": "Summarize or Reflect Practical Steps and Context",
+        "description": "Restate or clarify logistical details, background information, or practical context to support skill-building or experimentation.",
+        "states": [
+          "Clarifying patient narrative or sequence of recent events relevant to behavioral activation",
+          "When therapist reiterates details about new or planned activities/behaviors",
+          "Supporting transition to problem-solving discussion"
+        ],
+        "confidence_score": 0.75
       }
     ]
   },
@@ -581,6 +827,58 @@
           "Patient expresses shame or self-criticism"
         ],
         "confidence_score": 0.96
+      },
+      {
+        "name": "Prompt Patient Reflection on Skills Application",
+        "description": "Invite the patient to consider how they have applied CBT skills or homework assignments to recent experiences or challenges, fostering insight and self-reflection.",
+        "states": [
+          "Session review phase",
+          "After skill-related events are discussed",
+          "When consolidating learning at session close",
+          "When the patient describes relevant real-life experiences"
+        ],
+        "confidence_score": 0.9
+      },
+      {
+        "name": "Facilitate Session Structure and Focus",
+        "description": "Guide the patient to maintain session structure or stay on topic, including gently redirecting off-topic discussion or prompting the patient to proceed with agreed-upon tasks.",
+        "states": [
+          "When patient veers off-topic",
+          "Transitioning between agenda items",
+          "When managing time constraints during skill practice or review",
+          "When encouraging continued progress and focus"
+        ],
+        "confidence_score": 0.88
+      },
+      {
+        "name": "Clarify Concepts or Language",
+        "description": "Help the patient clarify, define, or elaborate on specific CBT terms, concepts, or emotional labels during skills review or homework discussion.",
+        "states": [
+          "When patient uses ambiguous terms",
+          "During review of skill use",
+          "When clarifying emotional experience post-homework"
+        ],
+        "confidence_score": 0.86
+      },
+      {
+        "name": "Encourage Patient Elaboration",
+        "description": "Prompt the patient to provide more detail about their thoughts, actions, or feelings related to skill practice, progress, or homework, to deepen exploration.",
+        "states": [
+          "During review of progress",
+          "When patient reports on application of skills",
+          "When more information is needed to assess barriers or reinforce progress"
+        ],
+        "confidence_score": 0.85
+      },
+      {
+        "name": "Integrate Theory with Practice",
+        "description": "Relate CBT concepts/theory directly to the patient's experience or homework, reinforcing their relevance to skill generalization.",
+        "states": [
+          "When discussing completed homework",
+          "During progress review when theory is referenced",
+          "When connecting theory to real-life issues"
+        ],
+        "confidence_score": 0.85
       }
     ]
   },
@@ -644,6 +942,36 @@
           "Anticipating need for assistance"
         ],
         "confidence_score": 0.95
+      },
+      {
+        "name": "Acknowledge and Validate Patient Experience",
+        "description": "Offer brief verbal affirmation, agreement, or emotional validation of patient's statements relevant to progress, setbacks, or concerns about transition. This includes short responses like 'Exactly', 'Indeed', or 'Absolutely' that support or normalize the patient's experience.",
+        "states": [
+          "Patient expresses insight about setbacks or maintenance",
+          "Patient shares concern about post-therapy transition",
+          "Patient reflects on progress or skills application",
+          "Termination phase dialogue reflecting on skills, worries, or future"
+        ],
+        "confidence_score": 0.95
+      },
+      {
+        "name": "Emotional Closure and Appreciation",
+        "description": "Express warmth, gratitude, and positive regard at termination or transition, such as appreciation for the therapeutic relationship or mutual well wishes.",
+        "states": [
+          "Termination session",
+          "Final moments of therapy",
+          "When reflecting on the therapist-patient relationship"
+        ],
+        "confidence_score": 0.9
+      },
+      {
+        "name": "Facilitate Post-Therapy Resource Connection",
+        "description": "Initiate or offer assistance in connecting the patient to therapists, support, or other helpful resources for the post-therapy period.",
+        "states": [
+          "Patient moving or unable to continue with current therapist",
+          "Termination/planning for future support needs"
+        ],
+        "confidence_score": 0.9
       }
     ]
   },
@@ -708,6 +1036,24 @@
           "During safety planning"
         ],
         "confidence_score": 0.95
+      },
+      {
+        "name": "Acknowledge Patient's Statements or Reality",
+        "description": "Neutral or minimal responses to show listening and acknowledge what patient or others have said, without adding emotional support or making assessments.",
+        "states": [
+          "Therapist is actively demonstrating they are listening, especially after patient disclosures in high-risk or crisis contexts",
+          "Responses to factual statements, confirmations, or recaps made by patient during crisis moments"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Clarify Patient's Circumstances or Statements",
+        "description": "Therapist seeks or provides clarification regarding patient's current situation, statements, or context relevant to crisis, without direct risk assessment or support.",
+        "states": [
+          "Therapist addresses confusion, ambiguity, or seeks more clarity about patient actions, plans, or feelings in high-risk or emergency contexts",
+          "Patient gives ambiguous, incomplete, or vague information about key crisis details"
+        ],
+        "confidence_score": 0.75
       }
     ]
   },
@@ -772,6 +1118,45 @@
           "Patient feels demoralized"
         ],
         "confidence_score": 0.95
+      },
+      {
+        "name": "Reflect and Summarize Session Process",
+        "description": "Briefly reiterate or reflect on what has occurred during the session, summarizing themes, events, or patient statements for clarity and continuity.",
+        "states": [
+          "When patient or therapist refers back to earlier session moments",
+          "Session transitions",
+          "Shifts in topic or session wrap-up"
+        ],
+        "confidence_score": 0.85
+      },
+      {
+        "name": "Acknowledge/Respond to Patient Emotion or Disclosure",
+        "description": "Respond empathetically or acknowledge the patient's feelings, disclosures, or sharing—even in a minimal or supportive way.",
+        "states": [
+          "Patient expresses an emotion or makes a disclosure",
+          "Patient shares vulnerability",
+          "Patient comments on their own barriers or process"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Clarify Patient Statement or Context",
+        "description": "Ask for clarification about the patient's statement, thought process, or contextual factors to ensure understanding.",
+        "states": [
+          "Patient makes a vague, partial, or ambiguous statement",
+          "Therapist seeks precision or deeper understanding"
+        ],
+        "confidence_score": 0.8
+      },
+      {
+        "name": "Respond to Logistics or Session Practicalities",
+        "description": "Address scheduling, session endings, contact arrangements, or other non-clinical practicalities to support ongoing engagement.",
+        "states": [
+          "Session closure",
+          "Arranging follow-ups or confirming contact",
+          "Administrative logistical barriers"
+        ],
+        "confidence_score": 0.75
       }
     ]
   }
