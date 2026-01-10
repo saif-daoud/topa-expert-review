@@ -68,11 +68,18 @@ type DatasetUser = {
 // -----------------------------
 // Helpers
 // -----------------------------
-async function postJSON(url: string, payload: any, extraHeaders?: Record<string, string>) {
+async function postJSON(
+  url: string,
+  payload: any,
+  extraHeaders?: Record<string, string>,
+  opts?: { keepalive?: boolean; signal?: AbortSignal },
+) {
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(extraHeaders || {}) },
     body: JSON.stringify(payload),
+    keepalive: opts?.keepalive,
+    signal: opts?.signal,
   });
   const txt = await r.text();
   let j: any = null;
@@ -80,14 +87,15 @@ async function postJSON(url: string, payload: any, extraHeaders?: Record<string,
     j = JSON.parse(txt);
   } catch {}
   if (!r.ok) {
-  const err: any = new Error(j?.error || txt || `HTTP ${r.status}`);
-  if (j && typeof j === "object") {
-    err.data = j;
-    if (Number.isFinite((j as any).assigned_chunk)) err.assigned_chunk = (j as any).assigned_chunk;
+    const err: any = new Error(j?.error || txt || `HTTP ${r.status}`);
+    err.status = r.status;
+    if (j && typeof j === "object") {
+      err.data = j;
+      if (Number.isFinite((j as any).assigned_chunk)) err.assigned_chunk = (j as any).assigned_chunk;
+    }
+    throw err;
   }
-  throw err;
-}
-return j;
+  return j;
 }
 
 // Small RFC4180-ish CSV parser (handles quotes + newlines)
@@ -808,14 +816,6 @@ function ReviewPage() {
     nav("/");
   }
 
-  async function saveProgress(newPos: number) {
-    try {
-      await postJSON(`${API_BASE}/progress_set`, { token, chunk_id: chunkId, current_pos: newPos });
-    } catch {
-      // optional
-    }
-  }
-
   async function onSubmit(next: boolean) {
     if (!ensureAuth()) return;
     if (!cur) return;
@@ -840,9 +840,13 @@ function ReviewPage() {
 
     const conf = expertConf ? Number(expertConf) : null;
 
+    // We only advance to the next sample after the backend confirms the review
+    // is stored in D1 (verified=true).
+    const nextIdx = next ? Math.min(idx + 1, total - 1) : idx;
+
     setBusy(true);
     try {
-      await postJSON(`${API_BASE}/review_submit`, {
+      const payload = {
         token,
         chunk_id: chunkId,
         key: curKey,
@@ -861,20 +865,40 @@ function ReviewPage() {
         timestamp_utc: new Date().toISOString(),
         page_url: window.location.href,
         user_agent: navigator.userAgent,
-        current_pos: idx,
+        // Save *the position we will show next* so refresh/resume lands on the right item.
+        current_pos: nextIdx,
+      };
+
+      const maxAttempts = 3;
+      let res: any = null;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+          res = await postJSON(`${API_BASE}/review_submit`, payload, undefined, { keepalive: true });
+          break;
+        } catch (e: any) {
+          const status = Number(e?.status);
+          // Don't retry auth/validation errors.
+          if (Number.isFinite(status) && status < 500) throw e;
+          if (attempt === maxAttempts - 1) throw e;
+          // Exponential backoff: 400ms, 800ms, 1600ms
+          await new Promise((r) => setTimeout(r, 400 * Math.pow(2, attempt)));
+        }
+      }
+
+      if (!res?.verified) {
+        const e: any = new Error("Saved but could not be verified in the database. Please retry.");
+        e.status = 500;
+        throw e;
+      }
+
+      setReviewedKeys((prev) => {
+        const s = new Set(prev);
+        s.add(curKey);
+        return s;
       });
 
-      const nextSet = new Set(reviewedKeys);
-      nextSet.add(curKey);
-      setReviewedKeys(nextSet);
-
-      if (next) {
-        const nextIdx = Math.min(idx + 1, total - 1);
-        setIdx(nextIdx);
-        await saveProgress(nextIdx);
-      } else {
-        await saveProgress(idx);
-      }
+      setIdx(nextIdx);
     } catch (e: any) {
       setErr(e?.message || "Failed to save review");
     } finally {
@@ -1126,7 +1150,7 @@ function ReviewPage() {
 
                 <div className="rowInline">
                                     <button className="btn primary" onClick={() => onSubmit(true)} disabled={busy}>
-                    {busy ? "Saving…" : idx >= total - 1 ? "Finish" : "Next"}
+                    {busy ? "Saving & verifying…" : idx >= total - 1 ? "Finish" : "Next"}
                   </button>
                 </div>
 </div>

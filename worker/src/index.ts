@@ -72,11 +72,23 @@ async function makeToken(env: Env, payload: any) {
 
 async function verifyToken(env: Env, token: string) {
   const [body, sig] = token.split(".");
-  if (!body || !sig) throw new Error("Bad token format");
+  if (!body || !sig) {
+    const e: any = new Error("Bad token format");
+    e.status = 401;
+    throw e;
+  }
   const expected = await hmacSign(env.TOKEN_SECRET, body);
-  if (expected !== sig) throw new Error("Bad token signature");
+  if (expected !== sig) {
+    const e: any = new Error("Bad token signature");
+    e.status = 401;
+    throw e;
+  }
   const payload = fromB64Json(body);
-  if (payload.exp && Date.now() > payload.exp) throw new Error("Token expired");
+  if (payload.exp && Date.now() > payload.exp) {
+    const e: any = new Error("Token expired");
+    e.status = 401;
+    throw e;
+  }
   return payload;
 }
 
@@ -309,6 +321,14 @@ async function dbUpsertReview(env: Env, row: any) {
       row.reviewed_at,
     )
     .run();
+}
+
+async function dbReviewExists(env: Env, id: string): Promise<boolean> {
+  const row = await env.DB
+    .prepare("SELECT id FROM utterance_reviews WHERE id = ? LIMIT 1")
+    .bind(id)
+    .first<{ id: string }>();
+  return !!row?.id;
 }
 
 async function dbListReviewedKeys(env: Env, reviewerHash: string, chunkId: number): Promise<string[]> {
@@ -565,6 +585,14 @@ if (path.endsWith("/api/claim_heartbeat")) {
           reviewed_at: reviewedAt,
         });
 
+        // Extra safety: verify the row is actually present in D1 before acknowledging success.
+        const exists = await dbReviewExists(env, id);
+        if (!exists) {
+          const e: any = new Error("Review saved but could not be verified in DB");
+          e.status = 500;
+          throw e;
+        }
+
         await dbMarkClaimProgress(env, chunkId, String(payload.emailHash || ""));
 
         // progress (optional)
@@ -572,7 +600,7 @@ if (path.endsWith("/api/claim_heartbeat")) {
           await dbSetProgress(env, String(payload.emailHash || ""), chunkId, Number(body.current_pos));
         }
 
-        return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
+        return new Response(JSON.stringify({ ok: true, id, verified: true, reviewed_at: reviewedAt }), { status: 200, headers });
       }
 
       // POST /api/review_list (auth)
