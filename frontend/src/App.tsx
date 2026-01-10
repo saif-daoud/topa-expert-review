@@ -250,6 +250,26 @@ function buildUtteranceIdMap(session: { dialogue: Array<{ speaker: string; text:
   return map;
 }
 
+function buildSpeakerLabelMap(session: { dialogue: Array<{ speaker: string; text: string }> }) {
+  const labels: string[] = new Array(session.dialogue.length);
+  let t = 0;
+  let p = 0;
+  session.dialogue.forEach((d, i) => {
+    const sp = speakerPretty(d.speaker);
+    if (sp === "therapist") {
+      t += 1;
+      labels[i] = `therapist_${t}`;
+    } else if (sp === "patient") {
+      p += 1;
+      labels[i] = `patient_${p}`;
+    } else {
+      labels[i] = sp;
+    }
+  });
+  return labels;
+}
+
+
 type HoverSelectOption = {
   name: string;
   description?: string;
@@ -914,6 +934,9 @@ function ReviewPage() {
     const s = findSession(u, cur.session_idx);
     if (!s) return null;
 
+    const labelMap = buildSpeakerLabelMap(s);
+
+
     const idMap = buildUtteranceIdMap(s);
     let targetIdx = idMap.get(cur.utterance_id);
     if (targetIdx === undefined) {
@@ -936,10 +959,10 @@ function ReviewPage() {
 
     return {
       sessionTitle: s.session_metadata?.Title || `Session ${cur.session_idx}`,
-      target: targetTurn ? { speaker: speakerPretty(targetTurn.speaker), text: targetTurn.text } : null,
-      prev: prevTurn ? { speaker: speakerPretty(prevTurn.speaker), text: prevTurn.text } : null,
+      target: targetTurn ? { speaker: labelMap[targetIdx] || speakerPretty(targetTurn.speaker), text: targetTurn.text } : null,
+      prev: prevTurn ? { speaker: labelMap[targetIdx - 1] || speakerPretty(prevTurn.speaker), text: prevTurn.text } : null,
       dialogue: slice.map((d, i) => ({
-        speaker: speakerPretty(d.speaker),
+        speaker: labelMap[i] || speakerPretty(d.speaker),
         text: d.text,
         isTarget: i === targetIdx,
       })),
