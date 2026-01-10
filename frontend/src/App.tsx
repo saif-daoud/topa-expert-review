@@ -256,11 +256,11 @@ function buildSpeakerLabelMap(session: { dialogue: Array<{ speaker: string; text
   session.dialogue.forEach((d, i) => {
     const sp = speakerPretty(d.speaker);
     if (sp === "therapist") {
-      t += 1;
       labels[i] = `therapist_${t}`;
+      t += 1;
     } else if (sp === "patient") {
-      p += 1;
       labels[i] = `patient_${p}`;
+      p += 1;
     } else {
       labels[i] = sp;
     }
