@@ -944,7 +944,7 @@ function ReviewPage() {
 
         {!cur && (
           <div className="alert">
-            No items found for this chunk (or data failed to load).
+            Loading data... please wait.
           </div>
         )}
 
