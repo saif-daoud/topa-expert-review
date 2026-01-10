@@ -174,18 +174,19 @@ async function dbGetClaimByEmailHash(env: Env, emailHash: string): Promise<Chunk
   }
 }
 
-async function dbClaimChunk(env: Env, chunkId: number, email: string, emailHash: string) {
+async function dbClaimChunk(env: Env, chunkId: number, codeHash: string, email: string, emailHash: string) {
   const nowIso = new Date().toISOString();
   const expiryIso = new Date(Date.now() - LEASE_MS).toISOString();
 
   try {
     const res = await env.DB
       .prepare(
-        `INSERT INTO chunk_claims(chunk_id, email, email_hash, claimed_at, updated_at, has_progress)
-         VALUES (?,?,?,?,?,0)
+        `INSERT INTO chunk_claims(chunk_id, code_hash, email, email_hash, claimed_at, updated_at, has_progress)
+         VALUES (?,?,?,?,?,?,0)
          ON CONFLICT(chunk_id) DO UPDATE SET
            email=excluded.email,
            email_hash=excluded.email_hash,
+           code_hash=excluded.code_hash,
            claimed_at=CASE
              WHEN chunk_claims.email_hash = excluded.email_hash THEN chunk_claims.claimed_at
              ELSE excluded.claimed_at
@@ -200,7 +201,7 @@ async function dbClaimChunk(env: Env, chunkId: number, email: string, emailHash:
            OR (chunk_claims.has_progress = 0 AND (chunk_claims.updated_at IS NULL OR chunk_claims.updated_at < ?))
         `,
       )
-      .bind(chunkId, email, emailHash, nowIso, nowIso, expiryIso)
+      .bind(chunkId, codeHash, email, emailHash, nowIso, nowIso, expiryIso)
       .run();
 
     if (Number(res.meta.changes) > 0) return;
@@ -479,7 +480,8 @@ export default {
           return new Response(JSON.stringify({ error: "Missing token or chunk_id" }), { status: 400, headers });
         }
         const payload = await verifyToken(env, token);
-        await dbClaimChunk(env, chunkId, payload.email, payload.emailHash);
+        if (!payload.codeHash) return new Response(JSON.stringify({ error: "Missing code context" }), { status: 401, headers });
+        await dbClaimChunk(env, chunkId, String(payload.codeHash || ""), payload.email, payload.emailHash);
         return new Response(JSON.stringify({ ok: true, assigned_chunk: chunkId }), { status: 200, headers });
       }
 
@@ -533,7 +535,7 @@ if (path.endsWith("/api/claim_heartbeat")) {
         if (!expertMicro) return new Response(JSON.stringify({ error: "expert_micro_action is required" }), { status: 400, headers });
 
         // enforce chunk lock
-        await dbClaimChunk(env, chunkId, payload.email, payload.emailHash);
+        await dbClaimChunk(env, chunkId, String(payload.codeHash || ""), payload.email, payload.emailHash);
 
         const reviewedAt = new Date().toISOString();
         const id = `${payload.emailHash}__${chunkId}__${itemKey}`;
