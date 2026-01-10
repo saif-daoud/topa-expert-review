@@ -20,7 +20,7 @@ const BASENAME = BASE_URL.endsWith("/") ? BASE_URL.slice(0, -1) : BASE_URL;
 // -----------------------------
 // Config (change here)
 // -----------------------------
-const NUM_CHUNKS = 4;
+const NUM_CHUNKS = 20;
 
 // -----------------------------
 // Types
@@ -248,28 +248,32 @@ function buildUtteranceIdMap(session: { dialogue: Array<{ speaker: string; text:
 function LoginPage() {
   const nav = useNavigate();
   const [code, setCode] = useState("");
+  const [email, setEmail] = useState(localStorage.getItem("expert_email") || "");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function onStart() {
     setErr(null);
     const c = code.trim();
+    const e = email.trim();
     if (!c) return setErr("Please enter your access code.");
+    if (!e) return setErr("Please enter your email.");
     setBusy(true);
     try {
-      const res = await postJSON(`${API_BASE}/start`, { code: c });
-      localStorage.setItem("token", res.token);
-localStorage.setItem("pid", res.participant_id);
+      const res = await postJSON(`${API_BASE}/start`, { code: c, email: e });
+      localStorage.setItem("token", String(res.token || ""));
+      localStorage.setItem("pid", String(res.participant_id || ""));
+      localStorage.setItem("expert_email", e);
 
-if (res?.assigned_chunk !== null && res?.assigned_chunk !== undefined) {
-  localStorage.setItem("chunk_id", String(res.assigned_chunk));
-  nav("/review");
-} else {
-  localStorage.removeItem("chunk_id");
-  nav("/chunks");
-}
-    } catch (e: any) {
-      setErr(e?.message || "Login failed");
+      if (res?.assigned_chunk !== null && res?.assigned_chunk !== undefined) {
+        localStorage.setItem("chunk_id", String(res.assigned_chunk));
+        nav("/review");
+      } else {
+        localStorage.removeItem("chunk_id");
+        nav("/chunks");
+      }
+    } catch (e2: any) {
+      setErr(e2?.message || "Login failed");
     } finally {
       setBusy(false);
     }
@@ -296,9 +300,24 @@ if (res?.assigned_chunk !== null && res?.assigned_chunk !== undefined) {
           />
         </div>
 
+        <div className="row">
+          <label className="label">Email</label>
+          <input
+            className="input"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onStart()}
+            disabled={busy}
+          />
+          <div className="muted small">
+            We use your email to lock a chunk to you so other emails can’t work on the same chunk.
+          </div>
+        </div>
+
         {err && <div className="alert danger">{err}</div>}
 
-        <button className="btn primary" onClick={onStart} disabled={busy}>
+        <button className="btn primary" onClick={onStart} disabled={busy || !code || !email}>
           {busy ? "Checking…" : "Start"}
         </button>
 
@@ -317,19 +336,22 @@ function ChunkSelectPage() {
   const storedChunkStr = localStorage.getItem("chunk_id");
   const storedChunk = storedChunkStr === null ? NaN : Number(storedChunkStr);
   const storedChunkFinite = Number.isFinite(storedChunk);
-  const [lockedChunk, setLockedChunk] = useState<number | null>(storedChunkFinite ? storedChunk : null);
   const [chunkId, setChunkId] = useState<number>(storedChunkFinite ? storedChunk : 0);
-const [claimed, setClaimed] = useState<Set<number>>(new Set());
+  const [claimed, setClaimed] = useState<Set<number>>(new Set());
+  const [mine, setMine] = useState<Set<number>>(new Set());
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await postJSON(`${API_BASE}/chunks_status`, {});
+        const res = await postJSON(`${API_BASE}/chunks_status`, { token });
         const s = new Set<number>();
         for (const x of res?.claimed || []) s.add(Number(x));
         setClaimed(s);
+        const m = new Set<number>();
+        for (const x of res?.mine || []) m.add(Number(x));
+        setMine(m);
       } catch {
         // optional
       }
@@ -337,38 +359,25 @@ const [claimed, setClaimed] = useState<Set<number>>(new Set());
   }, []);
 
   async function onContinue() {
-  setErr(null);
-  if (!token) return nav("/");
-  setBusy(true);
-  try {
-    const res = await postJSON(`${API_BASE}/chunk_claim`, { token, chunk_id: chunkId });
-    const assigned = Number(res?.assigned_chunk ?? chunkId);
-    if (Number.isFinite(assigned)) {
-      localStorage.setItem("chunk_id", String(assigned));
-      setLockedChunk(assigned);
-      setChunkId(assigned);
-    }
-    nav("/review");
-  } catch (e: any) {
-    const assigned = Number(e?.assigned_chunk ?? e?.data?.assigned_chunk);
-    if (Number.isFinite(assigned)) {
-      // This code already owns a chunk — lock to it and continue.
-      localStorage.setItem("chunk_id", String(assigned));
-      setLockedChunk(assigned);
-      setChunkId(assigned);
+    setErr(null);
+    if (!token) return nav("/");
+    setBusy(true);
+    try {
+      await postJSON(`${API_BASE}/chunk_claim`, { token, chunk_id: chunkId });
+      localStorage.setItem("chunk_id", String(chunkId));
       nav("/review");
-      return;
+    } catch (e: any) {
+      setErr(e?.data?.error || e?.message || "Unable to claim chunk");
+    } finally {
+      setBusy(false);
     }
-    setErr(e?.message || "Unable to claim chunk");
-  } finally {
-    setBusy(false);
   }
-}
 
 function onLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("pid");
     localStorage.removeItem("chunk_id");
+    localStorage.removeItem("expert_email");
     nav("/");
   }
 
@@ -379,7 +388,8 @@ function onLogout() {
           <div>
             <h1 className="title">Select your chunk</h1>
             <p className="muted">
-              Choose a chunk to work on. Each access code can claim exactly one chunk. Once claimed, the code cannot access other chunks.
+              Choose a chunk to work on. Chunk <strong>0</strong> contains the most uncertain items; chunk {NUM_CHUNKS - 1} is the least uncertain.
+              Chunks are locked by <strong>email</strong> (not by access code) so multiple experts can share one code safely.
             </p>
           </div>
           <div className="topbarActions">
@@ -396,18 +406,12 @@ function onLogout() {
             onChange={(e) => setChunkId(parseInt(e.target.value, 10))}
             disabled={busy}
           >
-            {(lockedChunk !== null ? [lockedChunk] : Array.from({ length: NUM_CHUNKS }, (_, i) => i)).map((i) => (
-              <option key={i} value={i}>
-                Chunk {i} {lockedChunk === i ? "(assigned)" : claimed.has(i) ? "(claimed)" : ""}
+            {Array.from({ length: NUM_CHUNKS }, (_, i) => i).map((i) => (
+              <option key={i} value={i} disabled={claimed.has(i) && !mine.has(i)}>
+                Chunk {i} {mine.has(i) ? "(yours)" : claimed.has(i) ? "(claimed)" : ""}
               </option>
             ))}
           </select>
-{lockedChunk !== null && (
-  <div className="alert info">
-    This access code is assigned to <b>Chunk {lockedChunk}</b>. You cannot switch chunks with this code.
-  </div>
-)}
-
         </div>
 
         {err && <div className="alert danger">{err}</div>}
@@ -415,7 +419,7 @@ function onLogout() {
         <button className="btn primary" onClick={onContinue} disabled={busy}>
           {busy ? "Claiming…" : "Continue"}
         </button>
-</div>
+      </div>
     </div>
   );
 }
@@ -425,9 +429,9 @@ function ReviewPage() {
 
   const token = localStorage.getItem("token") || "";
   const chunkId = Number(localStorage.getItem("chunk_id") || "0");
+  const email = localStorage.getItem("expert_email") || "";
 
   const [macros, setMacros] = useState<ActionSpaceMacro[]>([]);
-  const macroNames = useMemo(() => macros.map((m) => m.name), [macros]);
 
   const [rows, setRows] = useState<ReviewRow[]>([]);
   const [dataset, setDataset] = useState<DatasetUser[] | null>(null);
@@ -442,10 +446,35 @@ function ReviewPage() {
   const [macro, setMacro] = useState<string>("");
   const [micro, setMicro] = useState<string>("");
   const [microOther, setMicroOther] = useState<string>("");
+  const [microOtherDesc, setMicroOtherDesc] = useState<string>("");
   const [note, setNote] = useState<string>("");
   const [expertConf, setExpertConf] = useState<string>(""); // "" or "1".."10"
 
   const [showTranscript, setShowTranscript] = useState(false);
+
+  // Ensure chunk is claimed by this expert, and keep the lease alive.
+  useEffect(() => {
+    if (!token || !Number.isFinite(chunkId)) return;
+    let alive = true;
+
+    (async () => {
+      try {
+        await postJSON(`${API_BASE}/chunk_claim`, { token, chunk_id: chunkId });
+      } catch (e: any) {
+        if (!alive) return;
+        setErr(e?.data?.error || e?.message || "This chunk is currently locked by another expert.");
+      }
+    })();
+
+    const t = window.setInterval(() => {
+      postJSON(`${API_BASE}/claim_heartbeat`, { token, chunk_id: chunkId }).catch(() => {});
+    }, 60_000);
+
+    return () => {
+      alive = false;
+      window.clearInterval(t);
+    };
+  }, [token, chunkId]);
 
 
   // load static data
@@ -505,15 +534,28 @@ function ReviewPage() {
     })();
   }, [token, chunkId]);
 
-  // derive chunk subset
+  // derive chunk subset (sorted by uncertainty / low confidence first)
   const chunkRows = useMemo(() => {
-    const sorted = rows;
-    const withChunk = sorted.map((r, globalIndex) => ({
-      r,
-      globalIndex,
-      chunk: (globalIndex % NUM_CHUNKS),
-    }));
-    return withChunk.filter((x) => x.chunk === chunkId).map((x) => x.r);
+    if (!rows.length) return [];
+
+    const stable = buildStableSortedRows(rows);
+    const stableIdx = new Map(stable.map((r, i) => [makeKey(r), i] as const));
+    const score = (v: any) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : -Infinity; // missing/NaN => most uncertain
+    };
+
+    const ranked = [...stable].sort((a, b) => {
+      const da = score(a.confidence_score);
+      const db = score(b.confidence_score);
+      if (da !== db) return da - db;
+      return (stableIdx.get(makeKey(a)) ?? 0) - (stableIdx.get(makeKey(b)) ?? 0);
+    });
+
+    const n = ranked.length;
+    const start = Math.floor((n * chunkId) / NUM_CHUNKS);
+    const end = Math.floor((n * (chunkId + 1)) / NUM_CHUNKS);
+    return ranked.slice(start, Math.max(start, end));
   }, [rows, chunkId]);
 
   // Keep idx within chunkRows
@@ -534,6 +576,7 @@ function ReviewPage() {
     setMacro(r.selected_macro_action || "");
     setMicro((r.selected_micro_action && r.selected_micro_action !== "nan") ? r.selected_micro_action : "");
     setMicroOther("");
+    setMicroOtherDesc("");
     setNote("");
     setExpertConf("");
 
@@ -569,23 +612,46 @@ function ReviewPage() {
   }, [chunkRows, reviewedKeys]);
 
   const microOptions = useMemo(() => {
-    const m = macros.find((x) => x.name === macro);
-    const base = m?.micro_actions || [];
+    const md = macros.find((x) => x.name === macro);
+    const base = md?.micro_actions || [];
+    const items: Array<{ name: string; description: string }> = base
+      .map((x) => (typeof x === "string" ? { name: x, description: "" } : { name: x?.name || "", description: x?.description || "" }))
+      .filter((x) => !!x.name);
 
-    // action_space.json stores micro_actions as objects (with a `name` field).
-    // We support both strings and objects here.
-    const baseNames = base
-      .map((x) => (typeof x === "string" ? x : x?.name))
-      .filter((x): x is string => !!x && typeof x === "string");
+    const out: Array<{ name: string; description: string }> = [
+      { name: "None", description: "No micro action / not applicable" },
+      ...items,
+      { name: "Other (custom)", description: "Provide your own label" },
+    ];
 
-    const out: string[] = ["None", ...baseNames, "Other (custom)"];
+    // keep unknown selection selectable
+    if (micro && !out.some((o) => o.name === micro)) out.splice(1, 0, { name: micro, description: "" });
 
-    // If the currently-selected micro isn't in the action space, keep it selectable.
-    if (micro && !out.includes(micro)) out.splice(1, 0, micro);
-
-    // de-dup
-    return Array.from(new Set(out));
+    // de-dup by name
+    const seen = new Set<string>();
+    return out.filter((o) => {
+      if (seen.has(o.name)) return false;
+      seen.add(o.name);
+      return true;
+    });
   }, [macros, macro, micro]);
+
+  const macroDesc = useMemo(() => {
+    const m = macros.find((x) => x.name === macro);
+    return (m?.description || "").trim();
+  }, [macros, macro]);
+
+  const microDesc = useMemo(() => {
+    const m = microOptions.find((x) => x.name === micro);
+    return (m?.description || "").trim();
+  }, [microOptions, micro]);
+
+  const fmtOpt = (name: string, desc: string) => {
+    const d = (desc || "").trim();
+    if (!d) return name;
+    const short = d.length > 80 ? `${d.slice(0, 77)}…` : d;
+    return `${name} — ${short}`;
+  };
 
   function ensureAuth() {
     if (!token) {
@@ -599,6 +665,7 @@ function ReviewPage() {
     localStorage.removeItem("token");
     localStorage.removeItem("pid");
     localStorage.removeItem("chunk_id");
+    localStorage.removeItem("expert_email");
     nav("/");
   }
 
@@ -621,17 +688,15 @@ function ReviewPage() {
 
     let chosenMicro: string | null = micro.trim();
     let chosenMicroCustom: string | null = null;
+    let chosenMicroCustomDesc: string | null = null;
 
     if (chosenMicro === "Other (custom)") {
       const x = microOther.trim();
-      if (!x) return setErr("Please enter your custom micro action.");
-      chosenMicro = x;
+      const d = microOtherDesc.trim();
+      if (!x) return setErr("Please enter your custom micro action");
+      if (!d) return setErr("Please enter the custom micro description");
       chosenMicroCustom = x;
-    } else if (chosenMicro === "None") {
-      chosenMicro = "None";
-    } else if (!chosenMicro) {
-      // allow empty micro only if macro chosen? user asked "add the label None to micro actions"
-      chosenMicro = "None";
+      chosenMicroCustomDesc = d;
     }
 
     const conf = expertConf ? Number(expertConf) : null;
@@ -651,6 +716,7 @@ function ReviewPage() {
         expert_macro_action: chosenMacro,
         expert_micro_action: chosenMicro,
         expert_micro_custom: chosenMicroCustom,
+        expert_micro_custom_desc: chosenMicroCustomDesc,
         expert_confidence_1_10: conf,
         expert_note: note.trim() ? note.trim() : null,
         timestamp_utc: new Date().toISOString(),
@@ -734,6 +800,12 @@ function ReviewPage() {
             {/* <div className="chip">ID: {pid || "—"}</div> */}
             <button className="btn" onClick={() => nav("/chunks")}>Change chunk</button>
             <button className="btn" onClick={onLogout}>Logout</button>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="muted small">
+            Logged in as <strong>{email || "(unknown)"}</strong>.
           </div>
         </div>
 
@@ -834,14 +906,25 @@ function ReviewPage() {
 
                 <div className="row">
                   <label className="label">Macro action</label>
-                  <select className="select" value={macro} onChange={(e) => setMacro(e.target.value)} disabled={busy}>
+                  <select
+                    className="select"
+                    value={macro}
+                    onChange={(e) => {
+                      setMacro(e.target.value);
+                      setMicro("");
+                      setMicroOther("");
+                      setMicroOtherDesc("");
+                    }}
+                    disabled={busy}
+                  >
                     <option value="">Select…</option>
-                    {macroNames.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
+                    {macros.map((m) => (
+                      <option key={m.name} value={m.name}>
+                        {fmtOpt(m.name, m.description || "")}
                       </option>
                     ))}
                   </select>
+                  {macroDesc && <div className="help">{macroDesc}</div>}
                 </div>
 
                 <div className="row">
@@ -849,29 +932,47 @@ function ReviewPage() {
                   <select
                     className="select"
                     value={micro}
-                    onChange={(e) => setMicro(e.target.value)}
+                    onChange={(e) => {
+                      setMicro(e.target.value);
+                      setMicroOther("");
+                      setMicroOtherDesc("");
+                    }}
                     disabled={busy || !macro}
                   >
                     <option value="">Select…</option>
-                    {microOptions.map((x) => (
-                      <option key={x} value={x}>
-                        {x}
+                    {microOptions.map((m) => (
+                      <option key={m.name} value={m.name}>
+                        {fmtOpt(m.name, m.description || "")}
                       </option>
                     ))}
                   </select>
+                  {microDesc && <div className="help">{microDesc}</div>}
                 </div>
 
                 {micro === "Other (custom)" && (
-                  <div className="row">
-                    <label className="label">Custom micro action</label>
-                    <input
-                      className="input"
-                      placeholder="Type your micro action…"
-                      value={microOther}
-                      onChange={(e) => setMicroOther(e.target.value)}
-                      disabled={busy}
-                    />
-                  </div>
+                  <>
+                    <div className="row">
+                      <label className="label">Custom micro action</label>
+                      <input
+                        className="input"
+                        placeholder="Type your micro action…"
+                        value={microOther}
+                        onChange={(e) => setMicroOther(e.target.value)}
+                        disabled={busy}
+                      />
+                    </div>
+                    <div className="row">
+                      <label className="label">Custom micro description</label>
+                      <textarea
+                        className="textarea"
+                        placeholder="Describe what this custom micro action means…"
+                        value={microOtherDesc}
+                        onChange={(e) => setMicroOtherDesc(e.target.value)}
+                        disabled={busy}
+                      />
+                      <div className="muted small">Required for custom micro actions.</div>
+                    </div>
+                  </>
                 )}
 
                 <div className="row">
