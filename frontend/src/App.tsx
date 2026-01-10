@@ -242,6 +242,164 @@ function buildUtteranceIdMap(session: { dialogue: Array<{ speaker: string; text:
   return map;
 }
 
+type HoverSelectOption = {
+  name: string;
+  description?: string;
+};
+
+function HoverSelect({
+  value,
+  options,
+  placeholder = "Select…",
+  disabled,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  options: HoverSelectOption[];
+  placeholder?: string;
+  disabled?: boolean;
+  onChange: (next: string) => void;
+  ariaLabel?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [hoverIdx, setHoverIdx] = useState<number>(-1);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const selected = useMemo(() => options.find((o) => o.name === value) || null, [options, value]);
+  const selectedDesc = (selected?.description || "").trim();
+
+  useEffect(() => {
+    if (!open) return;
+
+    // initialize hover target
+    const idx = value ? options.findIndex((o) => o.name === value) : 0;
+    setHoverIdx(idx >= 0 ? idx : 0);
+
+    // focus the menu for keyboard navigation
+    requestAnimationFrame(() => menuRef.current?.focus());
+
+    const onDocMouseDown = (e: MouseEvent) => {
+      const t = e.target as Node | null;
+      if (!t) return;
+      if (menuRef.current?.contains(t)) return;
+      if (btnRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [open, options, value]);
+
+  const active = (hoverIdx >= 0 ? options[hoverIdx] : null) || null;
+  const activeDesc = (active?.description || "").trim();
+
+  const label = value ? value : placeholder;
+
+  const chooseIdx = (idx: number) => {
+    const opt = options[idx];
+    if (!opt) return;
+    onChange(opt.name);
+    setOpen(false);
+    requestAnimationFrame(() => btnRef.current?.focus());
+  };
+
+  const onButtonKeyDown = (e: any) => {
+    if (disabled) return;
+    if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+      e.preventDefault();
+      setOpen(true);
+    }
+  };
+
+  const onMenuKeyDown = (e: any) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHoverIdx((i) => Math.min(options.length - 1, (i < 0 ? 0 : i + 1)));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHoverIdx((i) => Math.max(0, (i < 0 ? 0 : i - 1)));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (hoverIdx >= 0) chooseIdx(hoverIdx);
+    }
+  };
+
+  return (
+    <div className={"hoverSelect" + (disabled ? " isDisabled" : "")}
+         aria-label={ariaLabel}
+    >
+      <button
+        ref={btnRef}
+        type="button"
+        className={"hoverSelectBtn" + (!value ? " isPlaceholder" : "")}
+        onClick={() => !disabled && setOpen((v) => !v)}
+        onKeyDown={onButtonKeyDown}
+        disabled={!!disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        title={selectedDesc || undefined}
+      >
+        <span className="hoverSelectBtnLabel">{label}</span>
+        <span className="hoverSelectChevron">▾</span>
+      </button>
+
+      {open && (
+        <div className="hoverSelectMenuWrap">
+          <div
+            ref={menuRef}
+            className="hoverSelectMenu"
+            tabIndex={-1}
+            onKeyDown={onMenuKeyDown}
+          >
+            <div className="hoverSelectMenuList" role="listbox">
+              {options.map((o, i) => {
+                const isSelected = o.name === value;
+                const isActive = i === hoverIdx;
+                return (
+                  <button
+                    key={o.name + String(i)}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    className={
+                      "hsOption" +
+                      (isSelected ? " selected" : "") +
+                      (isActive ? " active" : "")
+                    }
+                    onMouseEnter={() => setHoverIdx(i)}
+                    onFocus={() => setHoverIdx(i)}
+                    onClick={() => chooseIdx(i)}
+                  >
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="hoverSelectMenuDesc">
+              {activeDesc ? (
+                <div>{activeDesc}</div>
+              ) : (
+                <div className="muted small">Hover an action to see its description.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // -----------------------------
 // Pages
 // -----------------------------
@@ -310,9 +468,6 @@ function LoginPage() {
             onKeyDown={(e) => e.key === "Enter" && onStart()}
             disabled={busy}
           />
-          <div className="muted small">
-            We use your email to lock a chunk to you so other emails can’t work on the same chunk.
-          </div>
         </div>
 
         {err && <div className="alert danger">{err}</div>}
@@ -429,7 +584,6 @@ function ReviewPage() {
 
   const token = localStorage.getItem("token") || "";
   const chunkId = Number(localStorage.getItem("chunk_id") || "0");
-  const email = localStorage.getItem("expert_email") || "";
 
   const [macros, setMacros] = useState<ActionSpaceMacro[]>([]);
 
@@ -636,23 +790,6 @@ function ReviewPage() {
     });
   }, [macros, macro, micro]);
 
-  const macroDesc = useMemo(() => {
-    const m = macros.find((x) => x.name === macro);
-    return (m?.description || "").trim();
-  }, [macros, macro]);
-
-  const microDesc = useMemo(() => {
-    const m = microOptions.find((x) => x.name === micro);
-    return (m?.description || "").trim();
-  }, [microOptions, micro]);
-
-  const fmtOpt = (name: string, desc: string) => {
-    const d = (desc || "").trim();
-    if (!d) return name;
-    const short = d.length > 80 ? `${d.slice(0, 77)}…` : d;
-    return `${name} — ${short}`;
-  };
-
   function ensureAuth() {
     if (!token) {
       nav("/");
@@ -803,12 +940,6 @@ function ReviewPage() {
           </div>
         </div>
 
-        <div className="row">
-          <div className="muted small">
-            Logged in as <strong>{email || "(unknown)"}</strong>.
-          </div>
-        </div>
-
         {err && <div className="alert danger">{err}</div>}
 
         {!cur && (
@@ -906,47 +1037,33 @@ function ReviewPage() {
 
                 <div className="row">
                   <label className="label">Macro action</label>
-                  <select
-                    className="select"
+                  <HoverSelect
                     value={macro}
-                    onChange={(e) => {
-                      setMacro(e.target.value);
+                    options={macros}
+                    disabled={busy}
+                    ariaLabel="Macro action"
+                    onChange={(v) => {
+                      setMacro(v);
                       setMicro("");
                       setMicroOther("");
                       setMicroOtherDesc("");
                     }}
-                    disabled={busy}
-                  >
-                    <option value="">Select…</option>
-                    {macros.map((m) => (
-                      <option key={m.name} value={m.name}>
-                        {fmtOpt(m.name, m.description || "")}
-                      </option>
-                    ))}
-                  </select>
-                  {macroDesc && <div className="help">{macroDesc}</div>}
+                  />
                 </div>
 
                 <div className="row">
                   <label className="label">Micro action</label>
-                  <select
-                    className="select"
+                  <HoverSelect
                     value={micro}
-                    onChange={(e) => {
-                      setMicro(e.target.value);
+                    options={microOptions}
+                    disabled={busy || !macro}
+                    ariaLabel="Micro action"
+                    onChange={(v) => {
+                      setMicro(v);
                       setMicroOther("");
                       setMicroOtherDesc("");
                     }}
-                    disabled={busy || !macro}
-                  >
-                    <option value="">Select…</option>
-                    {microOptions.map((m) => (
-                      <option key={m.name} value={m.name}>
-                        {fmtOpt(m.name, m.description || "")}
-                      </option>
-                    ))}
-                  </select>
-                  {microDesc && <div className="help">{microDesc}</div>}
+                  />
                 </div>
 
                 {micro === "Other (custom)" && (

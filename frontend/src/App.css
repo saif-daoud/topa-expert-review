@@ -168,6 +168,110 @@
   font-size: 14px;
 }
 
+
+/*
+  HoverSelect: custom dropdown that shows the option description on hover.
+  (Native <select>/<option> cannot reliably show per-option tooltips.)
+*/
+.hoverSelect {
+  position: relative;
+}
+
+.hoverSelectBtn {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: white;
+  outline: none;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.hoverSelectBtn.isPlaceholder {
+  color: var(--muted);
+}
+
+.hoverSelectBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.hoverSelectChevron {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hoverSelectMenuWrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+  z-index: 50;
+}
+
+.hoverSelectMenu {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: white;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 760px) {
+  .hoverSelectMenu {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.hoverSelectMenuList {
+  max-height: 280px;
+  overflow: auto;
+  padding: 2px;
+}
+
+.hsOption {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 10px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.hsOption:hover,
+.hsOption.active {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.hsOption.selected {
+  font-weight: 900;
+}
+
+.hoverSelectMenuDesc {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border-left: 1px solid var(--border);
+}
+
+@media (max-width: 759px) {
+  .hoverSelectMenuDesc {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
