@@ -226,11 +226,10 @@ function speakerPretty(s: string): "therapist" | "patient" | "other" {
 
 function findSession(user: DatasetUser | null, session_idx: number) {
   if (!user) return null;
-  for (const s of user.sessions || []) {
-    const num = s.session_metadata?.Number;
-    if (typeof num === "number" && num === session_idx) return s;
-  }
-  return null;
+  const sessions = user.sessions || [];
+  if (!Number.isFinite(session_idx)) return null;
+  if (session_idx < 0 || session_idx >= sessions.length) return null;
+  return sessions[session_idx];
 }
 
 function buildUtteranceIdMap(session: { dialogue: Array<{ speaker: string; text: string }> }) {
