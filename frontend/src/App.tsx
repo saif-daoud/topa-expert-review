@@ -442,8 +442,11 @@ function LoginPage() {
       <div className="card">
         <h1 className="title">TOPA — Expert Review</h1>
         <p className="muted">
-          Enter your access code to review low-confidence (or missing) automatic annotations.
+          Please enter your access code to help us review the cases where our automatic annotations have high uncertainty. <br />
+          These annotations were generated across multiple sessions with different patients using an action space of therapist behaviors organized into macro actions (high-level dialogue strategies/phases) and micro actions (utterance-level behaviors that realize each macro action). <br />
+          Thank you for your time and help with this review.
         </p>
+
 
         <div className="row">
           <label className="label">Access code</label>
